@@ -1,0 +1,2 @@
+class EmailIsAlreadyTaken(Exception):
+  pass

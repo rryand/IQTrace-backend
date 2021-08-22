@@ -1,5 +1,8 @@
 from mongoengine import connect
+from mongoengine.errors import NotUniqueError
+
 from schemas import User
+from exceptions import EmailIsAlreadyTaken
 
 class DBService:
   def initialize_db(self):
@@ -8,7 +11,10 @@ class DBService:
 
   def create_user(self, user):
     new_user = User(**user)
-    new_user.save()
+    try:
+      new_user.save()
+    except NotUniqueError:
+      raise EmailIsAlreadyTaken(f"{user['email']} is aleady taken")
     return new_user.pk
   
   def get_users(self):

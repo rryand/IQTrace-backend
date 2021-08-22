@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from models import User as PyUser
 from services.db_service import DBService
+from exceptions import EmailIsAlreadyTaken
 
 app = FastAPI()
 
@@ -22,11 +23,16 @@ async def get_users():
 
 @app.post('/users')
 async def create_user(user: PyUser):
-  id = db.create_user(user.dict())
-  return {
-    'id': str(id),
-    **user.dict(),
-  }
+  try:
+    id = db.create_user(user.dict())
+  except EmailIsAlreadyTaken as err:
+    response = { 'message': str(err) }
+  else:
+    response = {
+      'id': str(id),
+      **user.dict(),
+    }
+  return response
 
 @app.delete('/users')
 async def delete_user():
