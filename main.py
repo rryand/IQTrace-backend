@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from models import User as PyUser
 from services.db_service import DBService
-from exceptions import EmailIsAlreadyTaken
+from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
 
 app = FastAPI()
 
@@ -34,10 +34,15 @@ async def create_user(user: PyUser):
     }
   return response
 
-@app.delete('/users')
-async def delete_user():
-  db.delete_user()
-  return { 'message': "User deleted" }
+@app.delete('/users/{id}')
+async def delete_user(id):
+  try:
+    db.delete_user(id)
+  except UserDoesNotExist as err:
+    response = { 'message': str(err) }
+  else:
+    response = { 'message': f"User {id} deleted" }
+  return response
 
 if __name__ == "__main__":
   uvicorn.run(app, host="0.0.0.0", port=8000)
