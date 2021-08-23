@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from mongoengine import connect, disconnect
 
@@ -10,7 +12,9 @@ def user():
   return {
     'email': "ryan@gmail.com",
     'first_name': "Ryan",
-    'last_name': "Dineros"
+    'last_name': "Dineros",
+    'contact_number': "09294137458",
+    'birthday': date(1996, 9, 16)
   }
 
 @pytest.fixture
