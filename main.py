@@ -1,7 +1,7 @@
 import json
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from models import UserOut, UserIn
 from services.db_service import DBService
@@ -31,7 +31,9 @@ async def create_user(user: UserIn):
     new_user.password = auth.generate_hashed_password(user.password)
     id = db.create_user(new_user.dict())
   except EmailIsAlreadyTaken as err:
-    response = { 'message': str(err) }
+    raise HTTPException(status_code= 403, detail=str(err))
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
   else:
     response = {
       'id': str(id),
@@ -44,7 +46,9 @@ async def delete_user(id):
   try:
     db.delete_user(id)
   except UserDoesNotExist as err:
-    response = { 'message': str(err) }
+    raise HTTPException(status_code=404, detail=str(err))
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
   else:
     response = { 'message': f"User {id} deleted" }
   return response
