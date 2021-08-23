@@ -7,3 +7,9 @@ class User(BaseModel):
   last_name: str
   contact_number: str
   birthday: date
+
+class UserIn(User):
+  password: str
+
+class UserOut(User):
+  id: str

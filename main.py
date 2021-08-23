@@ -3,14 +3,17 @@ import json
 import uvicorn
 from fastapi import FastAPI
 
-from models import User as PyUser
+from models import UserOut, UserIn
 from services.db_service import DBService
+from services.auth_service import AuthService
 from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
 
 app = FastAPI()
 
 db = DBService()
 db.initialize_db()
+
+auth = AuthService()
 
 @app.get('/')
 async def root():
@@ -21,16 +24,18 @@ async def get_users():
   users = db.get_users()
   return json.loads(users)
 
-@app.post('/users')
-async def create_user(user: PyUser):
+@app.post('/users', response_model=UserOut)
+async def create_user(user: UserIn):
   try:
-    id = db.create_user(user.dict())
+    new_user = user.copy()
+    new_user.password = auth.generate_hashed_password(user.password)
+    id = db.create_user(new_user.dict())
   except EmailIsAlreadyTaken as err:
     response = { 'message': str(err) }
   else:
     response = {
       'id': str(id),
-      **user.dict(),
+      **new_user.dict(),
     }
   return response
 
