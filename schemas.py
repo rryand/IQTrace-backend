@@ -1,4 +1,3 @@
-from enum import unique
 from mongoengine import Document, StringField, BooleanField, DateField
 
 class User(Document):
