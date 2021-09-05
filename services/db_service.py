@@ -17,6 +17,10 @@ class DBService:
       raise EmailIsAlreadyTaken(f"{user['email']} is aleady taken")
     return new_user.pk
   
+  def get_user_from_email(self, email):
+    user = User.objects.get(email=email)
+    return user
+  
   def get_users(self):
     return User.objects.to_json()
   

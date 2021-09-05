@@ -3,7 +3,7 @@ import json
 import uvicorn
 from fastapi import FastAPI, HTTPException
 
-from models import UserOut, UserIn
+from models import UserOut, UserIn, UserCredentials
 from services.db_service import DBService
 from services.auth_service import AuthService
 from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
@@ -24,8 +24,8 @@ async def get_users():
   users = db.get_users()
   return json.loads(users)
 
-@app.post('/users', response_model=UserOut)
-async def create_user(user: UserIn):
+@app.post('/users/register', response_model=UserOut)
+async def register_user(user: UserIn):
   try:
     new_user = user.copy()
     new_user.password = auth.generate_hashed_password(user.password)
@@ -40,6 +40,12 @@ async def create_user(user: UserIn):
       **new_user.dict(),
     }
   return response
+
+@app.post('/users/login')
+async def login(credentials: UserCredentials):
+  user = db.get_user_from_email(credentials.email)
+  is_authenticated = auth.verify_password(credentials.password, user.password)
+  return is_authenticated
 
 @app.delete('/users/{id}')
 async def delete_user(id):
