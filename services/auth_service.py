@@ -8,10 +8,8 @@ from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
+import settings
 from models import TokenData
-
-SECRET_KEY = "0e520a7811280d5782872ce234dace277a3e652f306aeade5635a3dae3b5bb43"
-ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
@@ -41,7 +39,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     expire = datetime.utcnow() + timedelta(minutes=15)
 
   to_encode.update({'exp': expire})
-  encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+  encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
   return encoded_jwt
 
 async def get_token_data(token: str = Depends(oauth2_scheme)):
@@ -52,7 +50,7 @@ async def get_token_data(token: str = Depends(oauth2_scheme)):
   )
 
   try:
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     username: str = payload.get('sub')
     if username is None:
       raise credentials_exception

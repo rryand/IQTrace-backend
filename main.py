@@ -5,12 +5,11 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
+import settings
 import services.auth_service as auth
 from services.db_service import DBService
 from models import UserOut, UserIn, Token, TokenData
 from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
-
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 app = FastAPI()
 
@@ -49,7 +48,7 @@ async def login(credentials: OAuth2PasswordRequestForm = Depends()):
   if not user:
     raise HTTPException(status_code=400, detail="Incorrect email or password")
 
-  access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+  access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
   access_token = auth.create_access_token(
     data = { 'sub': user.email },
     expires_delta = access_token_expires
