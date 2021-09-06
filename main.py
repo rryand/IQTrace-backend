@@ -37,7 +37,7 @@ async def register_user(user: UserIn):
     raise HTTPException(status_code=500, detail=str(err))
   else:
     response = {
-      'id': str(id),
+      'id': id,
       **new_user.dict(),
     }
   return response

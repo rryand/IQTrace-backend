@@ -5,26 +5,26 @@ from schemas import User
 from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
 
 class DBService:
-  def initialize_db(self):
+  def initialize_db(self) -> None:
     print("initializing db...")
-    connect("iqtrace")  
+    connect("iqtrace")
 
-  def create_user(self, user):
+  def create_user(self, user) -> str:
     new_user = User(**user)
     try:
       new_user.save()
     except NotUniqueError:
       raise EmailIsAlreadyTaken(f"{user['email']} is aleady taken")
-    return new_user.pk
+    return str(new_user.pk)
   
-  def get_user_from_email(self, email):
+  def get_user_from_email(self, email) -> User:
     user = User.objects.get(email=email)
     return user
   
-  def get_users(self):
+  def get_users(self) -> str:
     return User.objects.to_json()
   
-  def delete_user(self, id):
+  def delete_user(self, id) -> None:
     try:
       return User.objects.get(id=id).delete()
     except DoesNotExist:
