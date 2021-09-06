@@ -21,7 +21,11 @@ class DBService:
     user = User.objects.get(email=email)
     return user
   
-  def get_users(self) -> str:
+  def get_user_id_from_email(self, email) -> str:
+    user = self.get_user_from_email(email)
+    return str(user.pk)
+  
+  def get_users(self):
     return User.objects.to_json()
   
   def delete_user(self, id) -> None:

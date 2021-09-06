@@ -2,11 +2,12 @@ import json
 from datetime import timedelta
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 
 import settings
 import services.auth_service as auth
+import services.file_service as file_service
 from services.db_service import DBService
 from models import UserOut, UserIn, Token, TokenData
 from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
@@ -67,6 +68,13 @@ async def delete_user(id, token_data: TokenData = Depends(auth.get_token_data)):
   else:
     response = { 'message': f"User {id} deleted" }
   return response
+
+@app.post('/images', status_code=201)
+def save_image(file: UploadFile = File(...), token_data: TokenData = Depends(auth.get_token_data)):
+  id = db.get_user_id_from_email(token_data.username)
+  filename = file_service.save_image(file, image_name=id)
+
+  return { 'filename': filename }
 
 if __name__ == "__main__":
   uvicorn.run(app, host="0.0.0.0", port=8000)
