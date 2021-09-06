@@ -12,6 +12,7 @@ from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
 def user():
   return {
     'email': "ryan@gmail.com",
+    'password': 'password',
     'first_name': "Ryan",
     'last_name': "Dineros",
     'contact_number': "09294137458",
