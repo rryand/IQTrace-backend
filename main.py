@@ -1,19 +1,21 @@
 import json
+from datetime import timedelta
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 
-from models import UserOut, UserIn, UserCredentials
+import services.auth_service as auth
 from services.db_service import DBService
-from services.auth_service import AuthService
+from models import UserOut, UserIn, Token
 from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
+
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 app = FastAPI()
 
 db = DBService()
 db.initialize_db()
-
-auth = AuthService()
 
 @app.get('/')
 async def root():
@@ -41,11 +43,19 @@ async def register_user(user: UserIn):
     }
   return response
 
-@app.post('/users/login')
-async def login(credentials: UserCredentials):
-  user = db.get_user_from_email(credentials.email)
-  is_authenticated = auth.verify_password(credentials.password, user.password)
-  return is_authenticated
+@app.post('/users/login', response_model=Token)
+async def login(credentials: OAuth2PasswordRequestForm = Depends()):
+  user = auth.authenticate_user(db.get_user_from_email, credentials.username, credentials.password)
+  if not user:
+    raise HTTPException(status_code=400, detail="Incorrect email or password")
+
+  access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+  access_token = auth.create_access_token(
+    data = { 'sub': user.email },
+    expires_delta = access_token_expires
+  )
+
+  return { 'access_token': access_token, 'token_type': "bearer" }
 
 @app.delete('/users/{id}')
 async def delete_user(id):

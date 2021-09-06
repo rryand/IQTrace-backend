@@ -4,9 +4,6 @@ from pydantic import BaseModel
 class User(BaseModel):
   email: str
 
-class UserCredentials(User):
-  password: str
-
 class UserOut(User):
   first_name: str
   last_name: str
@@ -15,3 +12,10 @@ class UserOut(User):
 
 class UserIn(UserOut):
   password: str
+
+class Token(BaseModel):
+  access_token: str
+  token_type: str
+
+class TokenData(BaseModel):
+  username: str
