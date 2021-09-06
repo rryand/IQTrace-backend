@@ -26,7 +26,7 @@ async def get_users(token_data: TokenData = Depends(auth.get_token_data)):
   users = db.get_users()
   return json.loads(users)
 
-@app.post('/users/register', response_model=UserOut)
+@app.post('/users/register', response_model=UserOut, status_code=201)
 async def register_user(user: UserIn):
   try:
     new_user = user.copy()
