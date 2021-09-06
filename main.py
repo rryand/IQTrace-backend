@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 import services.auth_service as auth
 from services.db_service import DBService
-from models import UserOut, UserIn, Token
+from models import UserOut, UserIn, Token, TokenData
 from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -22,7 +22,7 @@ async def root():
   return {'message': "hello world!"}
 
 @app.get('/users')
-async def get_users():
+async def get_users(token_data: TokenData = Depends(auth.get_token_data)):
   users = db.get_users()
   return json.loads(users)
 
@@ -58,7 +58,7 @@ async def login(credentials: OAuth2PasswordRequestForm = Depends()):
   return { 'access_token': access_token, 'token_type': "bearer" }
 
 @app.delete('/users/{id}')
-async def delete_user(id):
+async def delete_user(id, token_data: TokenData = Depends(auth.get_token_data)):
   try:
     db.delete_user(id)
   except UserDoesNotExist as err:
