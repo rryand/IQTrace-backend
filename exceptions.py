@@ -3,3 +3,6 @@ class EmailIsAlreadyTaken(Exception):
 
 class UserDoesNotExist(Exception):
   pass
+
+class ImageDoesNotExist(Exception):
+  pass

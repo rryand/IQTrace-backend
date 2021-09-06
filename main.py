@@ -3,6 +3,7 @@ from datetime import timedelta
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
+from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 import settings
@@ -10,7 +11,7 @@ import services.auth_service as auth
 import services.file_service as file_service
 from services.db_service import DBService
 from models import UserOut, UserIn, Token, TokenData
-from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
+from exceptions import EmailIsAlreadyTaken, ImageDoesNotExist, UserDoesNotExist
 
 app = FastAPI()
 
@@ -68,6 +69,18 @@ async def delete_user(id, token_data: TokenData = Depends(auth.get_token_data)):
   else:
     response = { 'message': f"User {id} deleted" }
   return response
+
+@app.get('/images')
+async def get_image(token_data: TokenData = Depends(auth.get_token_data)):
+  id = db.get_user_id_from_email(token_data.username)
+  try:
+    image_path = file_service.get_image(id)
+  except ImageDoesNotExist as err:
+    raise HTTPException(status_code=404, detail=str(err))
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
+  else:
+    return FileResponse(image_path)
 
 @app.post('/images', status_code=201)
 def save_image(file: UploadFile = File(...), token_data: TokenData = Depends(auth.get_token_data)):
