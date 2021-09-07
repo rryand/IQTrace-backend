@@ -10,8 +10,8 @@ import settings
 import services.auth_service as auth
 import services.file_service as file_service
 from services.db_service import DBService
-from models import UserOut, UserIn, Token, TokenData
-from exceptions import EmailIsAlreadyTaken, ImageDoesNotExist, UserDoesNotExist
+from models import UserOut, UserIn, Token, TokenData, Room
+from exceptions import EmailIsAlreadyTaken, ImageDoesNotExist, RoomNumberIsAlreadyTaken, UserDoesNotExist
 
 app = FastAPI()
 
@@ -88,6 +88,26 @@ def save_image(file: UploadFile = File(...), token_data: TokenData = Depends(aut
   filename = file_service.save_image(file, image_name=id)
 
   return { 'filename': filename }
+
+@app.get('/rooms')
+def get_rooms():
+  rooms = db.get_rooms()
+  return json.loads(rooms)
+
+@app.post('/rooms', status_code=201)
+def create_room(room: Room):
+  try:
+    id = db.create_room(room.number, room.name)
+  except RoomNumberIsAlreadyTaken as err:
+    raise HTTPException(status_code=403, detail=str(err))
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
+  else:
+    response = {
+      'id': id,
+      **room.dict(),
+    }
+  return response
 
 if __name__ == "__main__":
   uvicorn.run(app, host="0.0.0.0", port=8000)

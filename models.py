@@ -1,4 +1,6 @@
 from datetime import date
+from typing import Optional
+
 from pydantic import BaseModel
 
 class User(BaseModel):
@@ -12,6 +14,10 @@ class UserOut(User):
 
 class UserIn(UserOut):
   password: str
+
+class Room(BaseModel):
+  number: int
+  name: Optional[str] = None
 
 class Token(BaseModel):
   access_token: str

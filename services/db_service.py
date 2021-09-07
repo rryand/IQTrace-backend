@@ -1,8 +1,8 @@
 from mongoengine import connect
 from mongoengine.errors import NotUniqueError, DoesNotExist
 
-from schemas import User
-from exceptions import EmailIsAlreadyTaken, UserDoesNotExist
+from schemas import User, Room
+from exceptions import EmailIsAlreadyTaken, RoomNumberIsAlreadyTaken, UserDoesNotExist
 
 class DBService:
   def initialize_db(self) -> None:
@@ -33,3 +33,15 @@ class DBService:
       return User.objects.get(id=id).delete()
     except DoesNotExist:
       raise UserDoesNotExist(f"User {id} does not exist")
+  
+  def create_room(self, room):
+    new_room = Room(**room)
+    try:
+      new_room.save()
+    except NotUniqueError:
+      raise RoomNumberIsAlreadyTaken(
+        f"Room number {room['number']} is already taken.")
+    return str(new_room.pk)
+  
+  def get_rooms(self):
+    return Room.objects.to_json()
