@@ -1,11 +1,14 @@
 class EmailIsAlreadyTaken(Exception):
   pass
 
-class RoomNumberIsAlreadyTaken(Exception):
+class RoomHasDuplicateNumberOrName(Exception):
   pass
 
 class UserDoesNotExist(Exception):
   pass
 
 class ImageDoesNotExist(Exception):
+  pass
+
+class RoomDoesNotExist(Exception):
   pass

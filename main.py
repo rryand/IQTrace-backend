@@ -11,7 +11,8 @@ import services.auth_service as auth
 import services.file_service as file_service
 from services.db_service import DBService
 from models import UserOut, UserIn, Token, TokenData, Room
-from exceptions import EmailIsAlreadyTaken, ImageDoesNotExist, RoomNumberIsAlreadyTaken, UserDoesNotExist
+from exceptions import (EmailIsAlreadyTaken, RoomHasDuplicateNumberOrName,
+  ImageDoesNotExist, UserDoesNotExist, RoomDoesNotExist)
 
 app = FastAPI()
 
@@ -98,7 +99,7 @@ def get_rooms():
 def create_room(room: Room):
   try:
     id = db.create_room(room.number, room.name)
-  except RoomNumberIsAlreadyTaken as err:
+  except RoomHasDuplicateNumberOrName as err:
     raise HTTPException(status_code=403, detail=str(err))
   except Exception as err:
     raise HTTPException(status_code=500, detail=str(err))
@@ -107,6 +108,18 @@ def create_room(room: Room):
       'id': id,
       **room.dict(),
     }
+  return response
+
+@app.delete('/rooms/{room_num}')
+def delete_room(room_num: int):
+  try:
+    db.delete_room(room_num)
+  except RoomDoesNotExist as err:
+    raise HTTPException(status_code=404, detail=str(err))
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
+  else:
+    response = { 'message': f"Room {room_num} deleted." }
   return response
 
 if __name__ == "__main__":

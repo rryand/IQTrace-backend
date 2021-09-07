@@ -7,7 +7,8 @@ from mongoengine.errors import DoesNotExist
 
 from schemas import User, Room
 from services.db_service import DBService
-from exceptions import EmailIsAlreadyTaken, RoomNumberIsAlreadyTaken, UserDoesNotExist
+from exceptions import (EmailIsAlreadyTaken, RoomDoesNotExist,
+  RoomHasDuplicateNumberOrName, UserDoesNotExist)
 
 @pytest.fixture
 def user():
@@ -28,58 +29,76 @@ def room():
   }
 
 @pytest.fixture
-def db_service():
+def db():
   return DBService()
 
 @pytest.fixture(autouse=True)
-def setup_mongodb():
+def setup_db():
   connect("mongoenginetest", host="mongomock://localhost")
 
   yield
 
   disconnect()
 
-def test__create_user__user_is_created(user, db_service, setup_mongodb):
-  id = db_service.create_user(user)
+def test__create_user__user_is_created(user, db, setup_db):
+  id = db.create_user(user)
 
   assert User.objects.get(id=id)
 
-def test__create_user__raise_if_email_is_taken(user, db_service, setup_mongodb):
-  db_service.create_user(user)
+def test__create_user__raise_if_email_is_taken(user, db, setup_db):
+  db.create_user(user)
   
   with pytest.raises(EmailIsAlreadyTaken):
-    db_service.create_user(user)
+    db.create_user(user)
 
-def test__delete_user__user_is_deleted(user, db_service, setup_mongodb):
+def test__delete_user__user_is_deleted(user, db, setup_db):
   other_user = user.copy()
   other_user['email'] = "ramses@yahoo.com"
-  db_service.create_user(other_user)
+  db.create_user(other_user)
 
-  id = db_service.create_user(user)
+  id = db.create_user(user)
 
-  db_service.delete_user(id)
+  db.delete_user(id)
 
   with pytest.raises(DoesNotExist):
     User.objects.get(id=id)
 
-def test__delete_user__nonexistent_user_raises_exception(user, db_service, setup_mongodb):
+def test__delete_user__nonexistent_user_raises_exception(user, db, setup_db):
   with pytest.raises(UserDoesNotExist):
-    db_service.delete_user("6123361c16cce88331c423b1")
+    db.delete_user("6123361c16cce88331c423b1")
 
-def test__create_room__creates_room(room, db_service, setup_mongodb):
-  id = db_service.create_room(room)
+def test__create_room__creates_room(room, db, setup_db):
+  id = db.create_room(room)
 
   assert Room.objects.get(id=id)
 
-def test__create_room__raise_if_room_number_is_taken(room, db_service, setup_mongodb):
-  db_service.create_room(room)
+def test__create_room__raise_if_room_number_is_taken(room, db, setup_db):
+  db.create_room(room)
 
-  with pytest.raises(RoomNumberIsAlreadyTaken):
-    db_service.create_room(room)
+  with pytest.raises(RoomHasDuplicateNumberOrName):
+    db.create_room(room)
 
-def test__get_rooms__gets_all_rooms(room, db_service, setup_mongodb):
-  db_service.create_room(room)
-  rooms = json.loads(db_service.get_rooms())
+def test__get_rooms__gets_all_rooms(room, db, setup_db):
+  db.create_room(room)
+  rooms = json.loads(db.get_rooms())
 
   assert len(rooms) > 0
   assert rooms[0]['number'] == room['number']
+
+def test__delete_room__room_is_deleted(room, db, setup_db):
+  other_room = {
+    'number': 1,
+    'name': 'Other Room'
+  }
+
+  db.create_room(other_room)
+  db.create_room(room)
+
+  db.delete_room(room['number'])
+
+  with pytest.raises(DoesNotExist):
+    Room.objects.get(number=room['number'])
+
+def test__delete_room__nonexistent_room_raises_exception(room, db, setup_db):
+  with pytest.raises(RoomDoesNotExist):
+    db.delete_room(16)
