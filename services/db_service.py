@@ -1,8 +1,9 @@
 from mongoengine import connect
 from mongoengine.errors import NotUniqueError, DoesNotExist
 
-from schemas import User, Room
-from exceptions import EmailIsAlreadyTaken, RoomDoesNotExist, RoomHasDuplicateNumberOrName, UserDoesNotExist
+from schemas import User, Room, Timelog
+from exceptions import (EmailIsAlreadyTaken, RoomDoesNotExist,
+  RoomHasDuplicateNumberOrName, UserDoesNotExist)
 
 
 def initialize_db() -> None:
@@ -51,3 +52,8 @@ def delete_room(room_num) -> None:
     Room.objects.get(number=room_num).delete()
   except DoesNotExist:
     raise RoomDoesNotExist(f"Room {room_num} does not exist.")
+
+def create_timelog(timelog):
+  new_timelog = Timelog(**timelog)
+  new_timelog.save()
+  return str(new_timelog.pk)

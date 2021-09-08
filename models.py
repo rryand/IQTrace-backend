@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -18,6 +18,11 @@ class UserIn(UserOut):
 class Room(BaseModel):
   number: int
   name: Optional[str] = None
+
+class Timelog(BaseModel):
+  user_id: str
+  room_num: int
+  timestamp: datetime
 
 class Token(BaseModel):
   access_token: str

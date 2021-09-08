@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from os import stat
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
@@ -9,14 +10,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 import settings
 import services.auth_service as auth
 import services.file_service as file_service
-from services.db_service import DBService
-from models import UserOut, UserIn, Token, TokenData, Room
+import services.db_service as db
+from models import UserOut, UserIn, Token, TokenData, Room, Timelog
 from exceptions import (EmailIsAlreadyTaken, RoomHasDuplicateNumberOrName,
   ImageDoesNotExist, UserDoesNotExist, RoomDoesNotExist)
 
 app = FastAPI()
 
-db = DBService()
 db.initialize_db()
 
 @app.get('/')
@@ -120,6 +120,19 @@ def delete_room(room_num: int):
     raise HTTPException(status_code=500, detail=str(err))
   else:
     response = { 'message': f"Room {room_num} deleted." }
+  return response
+
+@app.post('/timelog', status_code=201)
+def create_timelog(timelog: Timelog):
+  try:
+    id = db.create_timelog()
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
+  else:
+    response = {
+      'id': id,
+      **timelog.dict(),
+    }
   return response
 
 if __name__ == "__main__":

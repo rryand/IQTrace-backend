@@ -1,12 +1,12 @@
 import json
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 from mongoengine import connect, disconnect
 from mongoengine.errors import DoesNotExist
 
 import services.db_service as db
-from schemas import User, Room
+from schemas import User, Room, Timelog
 from exceptions import (EmailIsAlreadyTaken, RoomDoesNotExist,
   RoomHasDuplicateNumberOrName, UserDoesNotExist)
 
@@ -26,6 +26,13 @@ def room():
   return {
     'number': 16,
     'name': "My Room"
+  }
+
+def timelog(user_id, timestamp):
+  return {
+    'user_id': user_id,
+    'room_number': 1,
+    'timestamp': timestamp
   }
 
 @pytest.fixture(autouse=True)
@@ -98,3 +105,12 @@ def test__delete_room__room_is_deleted(room, setup_db):
 def test__delete_room__nonexistent_room_raises_exception(setup_db):
   with pytest.raises(RoomDoesNotExist):
     db.delete_room(16)
+
+def test__create_timelog__creates_timelog(user, setup_db):
+  user_id = db.create_user(user)
+  timestamp = datetime.utcnow()
+
+  timelog_id = db.create_timelog(timelog(user_id, timestamp))
+
+  assert Timelog.objects.get(id=timelog_id)
+
