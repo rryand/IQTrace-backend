@@ -122,10 +122,15 @@ def delete_room(room_num: int):
     response = { 'message': f"Room {room_num} deleted." }
   return response
 
+@app.get('/rooms/{room_num}/timelogs')
+def get_room_timelogs(room_num: int):
+  timelogs = db.get_timelogs_from_room_number(room_num)
+  return timelogs
+
 @app.post('/timelog', status_code=201)
 def create_timelog(timelog: Timelog):
   try:
-    id = db.create_timelog()
+    id = db.create_timelog(timelog.dict())
   except Exception as err:
     raise HTTPException(status_code=500, detail=str(err))
   else:

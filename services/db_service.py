@@ -47,13 +47,26 @@ def create_room(room) -> str:
 def get_rooms():
   return Room.objects.to_json()
 
-def delete_room(room_num) -> None:
+def get_room(room_num):
   try:
-    Room.objects.get(number=room_num).delete()
-  except DoesNotExist:
+    return Room.objects.get(number=room_num)
+  except:
     raise RoomDoesNotExist(f"Room {room_num} does not exist.")
 
-def create_timelog(timelog):
+def delete_room(room_num) -> None:
+  get_room(room_num).delete()
+
+def create_timelog(timelog) -> str:
   new_timelog = Timelog(**timelog)
   new_timelog.save()
   return str(new_timelog.pk)
+
+def get_timelogs_from_room_number(room_num: int) -> str:
+  get_room(room_num)
+  timelogs_query = Timelog.objects(room_number=room_num).exclude('id').all()
+  
+  timelogs = []
+  for timelog in timelogs_query:
+    timelogs.append(timelog.to_mongo().to_dict())
+  
+  return timelogs

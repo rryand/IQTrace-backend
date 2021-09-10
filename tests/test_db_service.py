@@ -31,7 +31,7 @@ def room():
 def timelog(user_id, timestamp):
   return {
     'user_id': user_id,
-    'room_number': 1,
+    'room_number': 16,
     'timestamp': timestamp
   }
 
@@ -88,6 +88,16 @@ def test__get_rooms__gets_all_rooms(room, setup_db):
   assert len(rooms) > 0
   assert rooms[0]['number'] == room['number']
 
+def test__get_room__returns_room(room, setup_db):
+  db.create_room(room)
+  new_room = db.get_room(room['number'])
+
+  assert Room.objects.get(number=room['number']) == new_room
+
+def test__get_room__nonexistent_room_raises_exception(setup_db):
+  with pytest.raises(RoomDoesNotExist):
+    db.get_room(16)
+
 def test__delete_room__room_is_deleted(room, setup_db):
   other_room = {
     'number': 1,
@@ -114,3 +124,15 @@ def test__create_timelog__creates_timelog(user, setup_db):
 
   assert Timelog.objects.get(id=timelog_id)
 
+def test__get_timelogs__gets_all_timelogs_for_room(room, setup_db):
+  db.create_room(room)
+  timelog1 = timelog("test1", datetime.utcnow())
+  timelog2 = timelog("test2", datetime.utcnow())
+  db.create_timelog(timelog1)
+  db.create_timelog(timelog2)
+
+  timelogs = db.get_timelogs_from_room_number(timelog1['room_number'])
+
+  assert len(timelogs) == 2
+  assert timelogs[0]['user_id'] == "test1"
+  assert timelogs[1]['user_id'] == "test2"

@@ -21,7 +21,7 @@ class Room(BaseModel):
 
 class Timelog(BaseModel):
   user_id: str
-  room_num: int
+  room_number: int
   timestamp: datetime
 
 class Token(BaseModel):
