@@ -1,4 +1,5 @@
-from mongoengine import Document, StringField, BooleanField, DateField, DateTimeField, IntField
+from mongoengine import (Document, StringField, BooleanField,
+  DateField, DateTimeField, IntField, DictField)
 
 class User(Document):
   email = StringField(required=True, unique=True)
@@ -8,6 +9,7 @@ class User(Document):
   last_name = StringField(required=True, max_length=50)
   contact_number = StringField(required=True)
   birthday = DateField(required=True)
+  survey = DictField()
 
 class Timelog(Document):
   user_id = StringField(required=True)

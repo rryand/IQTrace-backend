@@ -11,6 +11,7 @@ class UserOut(User):
   last_name: str
   contact_number: str
   birthday: date
+  survey: Optional[dict] = {}
 
 class UserIn(UserOut):
   password: str

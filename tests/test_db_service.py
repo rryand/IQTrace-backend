@@ -1,5 +1,6 @@
 import json
 from datetime import date, datetime
+from main import update_user
 
 import pytest
 from mongoengine import connect, disconnect
@@ -9,6 +10,8 @@ import services.db_service as db
 from schemas import User, Room, Timelog
 from exceptions import (EmailIsAlreadyTaken, RoomDoesNotExist,
   RoomHasDuplicateNumberOrName, UserDoesNotExist)
+
+disconnect()
 
 @pytest.fixture
 def user():
@@ -69,6 +72,15 @@ def test__delete_user__user_is_deleted(user, setup_db):
 def test__delete_user__nonexistent_user_raises_exception(user, setup_db):
   with pytest.raises(UserDoesNotExist):
     db.delete_user("6123361c16cce88331c423b1")
+
+def test__update_user__updates_user(user, setup_db):
+  updated_user = user.copy()
+  updated_user['first_name'] = "Ramses Ryan"
+  
+  id = db.create_user(user)
+  db.update_user(user['email'], updated_user)
+
+  assert User.objects.get(id=id).first_name == "Ramses Ryan"
 
 def test__create_room__creates_room(room, setup_db):
   id = db.create_room(room)

@@ -35,6 +35,11 @@ def delete_user(id) -> None:
   except DoesNotExist:
     raise UserDoesNotExist(f"User {id} does not exist.")
 
+def update_user(email, user_data) -> str:
+  user_db = get_user_from_email(email)
+  user_db.update(**user_data)
+  return str(user_db.pk)
+
 def create_room(room) -> str:
   new_room = Room(**room)
   try:

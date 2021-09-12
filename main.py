@@ -58,6 +58,13 @@ async def login(credentials: OAuth2PasswordRequestForm = Depends()):
 
   return { 'access_token': access_token, 'token_type': "bearer" }
 
+@app.put('/users/me')
+async def update_user(user: UserOut, token_data: TokenData = Depends(auth.get_token_data)):
+  user_data = user.dict()
+  user_data.pop('email')
+  id = db.update_user(token_data.username, user_data)
+  return { 'id': id, **user.dict() }
+
 @app.delete('/users/{id}')
 async def delete_user(id, token_data: TokenData = Depends(auth.get_token_data)):
   try:
