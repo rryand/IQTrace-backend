@@ -1,0 +1,9 @@
+pytest==6.2.4
+python_jose==3.3.0
+pydantic==1.8.2
+uvicorn==0.13.4
+mongoengine==0.23.1
+fastapi==0.68.1
+jose==1.0.0
+python-dotenv==0.19.0
+python_bcrypt==0.3.2
