@@ -1,6 +1,5 @@
 import json
 from datetime import timedelta
-from os import stat
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
@@ -124,7 +123,10 @@ def delete_room(room_num: int):
 
 @app.get('/rooms/{room_num}/timelogs')
 def get_room_timelogs(room_num: int):
-  timelogs = db.get_timelogs_from_room_number(room_num)
+  try:
+    timelogs = db.get_timelogs_from_room_number(room_num)
+  except RoomDoesNotExist as err:
+    raise HTTPException(status_code=404, detail=str(err))
   return timelogs
 
 @app.post('/timelog', status_code=201)
