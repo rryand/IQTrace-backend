@@ -3,20 +3,25 @@ from datetime import timedelta
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
-from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 import settings
+import services.face_recog as face_recog
 import services.auth_service as auth
-import services.file_service as file_service
 import services.db_service as db
 from models import UserOut, UserIn, Token, TokenData, Room, Timelog
 from exceptions import (EmailIsAlreadyTaken, RoomHasDuplicateNumberOrName,
-  ImageDoesNotExist, UserDoesNotExist, RoomDoesNotExist)
+  UserDoesNotExist, RoomDoesNotExist, FileTypeNotAllowed)
 
 app = FastAPI()
 
 db.initialize_db()
+
+async def verify_image_file_type(file: UploadFile = File(...)):
+  if file.content_type not in settings.ALLOWED_MIME_TYPES:
+    raise FileTypeNotAllowed(f"File type {file.content_type} is not allowed.")
+  else:
+    return file
 
 @app.get('/')
 async def root():
@@ -65,6 +70,28 @@ async def update_user(user: UserOut, token_data: TokenData = Depends(auth.get_to
   id = db.update_user(token_data.username, user_data)
   return { 'id': id, **user.dict() }
 
+@app.patch('/users/me/image-encoding')
+def update_user_encoding(image: UploadFile = Depends(verify_image_file_type),
+                         token_data: TokenData = Depends(auth.get_token_data)):
+  uploaded_image = face_recog.load_image(image.file)
+  face_encoding = face_recog.generate_face_encoding(uploaded_image)
+  
+  encoding_data = { 'face_encoding': face_encoding }
+  db.update_user(token_data.username, encoding_data)
+
+  return encoding_data
+
+@app.post('/users/me/image-encoding/compare')
+async def verify_image(image: UploadFile = Depends(verify_image_file_type),
+                       token_data: TokenData = Depends(auth.get_token_data)):
+  user = db.get_user_from_email(token_data.username)
+
+  uploaded_image = face_recog.load_image(image.file)
+  uploaded_face_encoding = face_recog.generate_face_encoding(uploaded_image)
+
+  is_similar = face_recog.compare_faces(user.face_encoding, uploaded_face_encoding)
+  return { 'is_similar': is_similar }
+
 @app.delete('/users/{id}')
 async def delete_user(id, token_data: TokenData = Depends(auth.get_token_data)):
   try:
@@ -76,25 +103,6 @@ async def delete_user(id, token_data: TokenData = Depends(auth.get_token_data)):
   else:
     response = { 'message': f"User {id} deleted" }
   return response
-
-@app.get('/images')
-async def get_image(token_data: TokenData = Depends(auth.get_token_data)):
-  id = db.get_user_id_from_email(token_data.username)
-  try:
-    image_path = file_service.get_image(id)
-  except ImageDoesNotExist as err:
-    raise HTTPException(status_code=404, detail=str(err))
-  except Exception as err:
-    raise HTTPException(status_code=500, detail=str(err))
-  else:
-    return FileResponse(image_path)
-
-@app.post('/images', status_code=201)
-def save_image(file: UploadFile = File(...), token_data: TokenData = Depends(auth.get_token_data)):
-  id = db.get_user_id_from_email(token_data.username)
-  filename = file_service.save_image(file, image_name=id)
-
-  return { 'filename': filename }
 
 @app.get('/rooms')
 def get_rooms():
@@ -150,4 +158,4 @@ def create_timelog(timelog: Timelog):
   return response
 
 if __name__ == "__main__":
-  uvicorn.run(app, host="0.0.0.0", port=8000)
+  uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

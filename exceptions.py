@@ -7,8 +7,11 @@ class RoomHasDuplicateNumberOrName(Exception):
 class UserDoesNotExist(Exception):
   pass
 
-class ImageDoesNotExist(Exception):
+class RoomDoesNotExist(Exception):
   pass
 
-class RoomDoesNotExist(Exception):
+class HasMoreThanOneFace(Exception):
+  pass
+
+class FileTypeNotAllowed(Exception):
   pass

@@ -12,6 +12,7 @@ class UserOut(User):
   contact_number: str
   birthday: date
   survey: Optional[dict] = {}
+  face_encoding: Optional[list] = None
 
 class UserIn(UserOut):
   password: str
