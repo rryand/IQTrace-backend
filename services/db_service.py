@@ -19,7 +19,10 @@ def create_user(user) -> str:
   return str(new_user.pk)
 
 def get_user_from_email(email) -> User:
-  user = User.objects.get(email=email)
+  try:
+    user = User.objects.get(email=email)
+  except DoesNotExist:
+    return None
   return user
 
 def get_user_id_from_email(email) -> str:

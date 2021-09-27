@@ -35,6 +35,7 @@ async def get_users(token_data: TokenData = Depends(auth.get_token_data)):
 @app.post('/users/register', response_model=UserOut, status_code=201)
 async def register_user(user: UserIn):
   try:
+    user.is_admin = False
     new_user = user.copy()
     new_user.password = auth.generate_hashed_password(user.password)
     id = db.create_user(new_user.dict())
@@ -63,10 +64,19 @@ async def login(credentials: OAuth2PasswordRequestForm = Depends()):
 
   return { 'access_token': access_token, 'token_type': "bearer" }
 
+@app.get('/users/me', response_model=UserOut)
+async def get_current_user(token_data: TokenData = Depends(auth.get_token_data)):
+  user = db.get_user_from_email(token_data.username)
+  if not user:
+    raise HTTPException(status_code=404, detail="User not found.")
+  
+  return user.to_mongo().to_dict()
+
 @app.put('/users/me')
 async def update_user(user: UserOut, token_data: TokenData = Depends(auth.get_token_data)):
   user_data = user.dict()
   user_data.pop('email')
+  user_data.pop('is_admin')
   id = db.update_user(token_data.username, user_data)
   return { 'id': id, **user.dict() }
 
@@ -158,4 +168,4 @@ def create_timelog(timelog: Timelog):
   return response
 
 if __name__ == "__main__":
-  uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+  uvicorn.run(app, host="0.0.0.0", port=8000)
