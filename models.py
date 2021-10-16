@@ -11,7 +11,7 @@ class UserOut(User):
   last_name: str
   contact_number: str
   birthday: date
-  survey: Optional[dict] = {}
+  survey: Optional[list] = []
   is_admin: bool = False
   face_encoding: Optional[list] = None
 
@@ -23,7 +23,7 @@ class Room(BaseModel):
   name: Optional[str] = None
 
 class Timelog(BaseModel):
-  user_id: str
+  user_email: str
   room_number: int
   timestamp: datetime
 

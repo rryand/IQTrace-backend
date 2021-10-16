@@ -69,7 +69,7 @@ def create_timelog(timelog) -> str:
   new_timelog.save()
   return str(new_timelog.pk)
 
-def get_timelogs_from_room_number(room_num: int) -> str:
+def get_timelogs_from_room_number(room_num: int) -> list:
   get_room(room_num)
   timelogs_query = Timelog.objects(room_number=room_num).exclude('id').all()
   

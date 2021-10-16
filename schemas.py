@@ -9,11 +9,11 @@ class User(Document):
   last_name = StringField(required=True, max_length=50)
   contact_number = StringField(required=True)
   birthday = DateField(required=True)
-  survey = DictField()
+  survey = ListField()
   face_encoding = ListField()
 
 class Timelog(Document):
-  user_id = StringField(required=True)
+  user_email = StringField(required=True)
   room_number = IntField(required=True)
   timestamp = DateTimeField(required=True)
 

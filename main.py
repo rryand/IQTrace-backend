@@ -122,7 +122,7 @@ def get_rooms():
 @app.post('/rooms', status_code=201)
 def create_room(room: Room):
   try:
-    id = db.create_room(room.number, room.name)
+    id = db.create_room({'number': room.number, 'name': room.name})
   except RoomHasDuplicateNumberOrName as err:
     raise HTTPException(status_code=403, detail=str(err))
   except Exception as err:
