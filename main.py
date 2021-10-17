@@ -27,7 +27,12 @@ async def verify_image_file_type(file: UploadFile = File(...)):
 async def root():
   return {'message': "hello world!"}
 
-@app.get('/users')
+@app.get('/users', response_model=UserOut)
+async def get_users(email: str):
+  user = db.get_user_from_email(email)
+  return user.to_mongo().to_dict()
+
+@app.get('/users/all')
 async def get_users(token_data: TokenData = Depends(auth.get_token_data)):
   users = db.get_users()
   return json.loads(users)
