@@ -13,5 +13,8 @@ class RoomDoesNotExist(Exception):
 class HasMoreThanOneFace(Exception):
   pass
 
+class CannotReadFace(Exception):
+  pass
+
 class FileTypeNotAllowed(Exception):
   pass

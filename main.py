@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+import shutil
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
@@ -10,12 +11,14 @@ import services.face_recog as face_recog
 import services.auth_service as auth
 import services.db_service as db
 from models import UserOut, UserIn, Token, TokenData, Room, Timelog
-from exceptions import (EmailIsAlreadyTaken, RoomHasDuplicateNumberOrName,
+from exceptions import (CannotReadFace, EmailIsAlreadyTaken, HasMoreThanOneFace, RoomHasDuplicateNumberOrName,
   UserDoesNotExist, RoomDoesNotExist, FileTypeNotAllowed)
 
 app = FastAPI()
 
 db.initialize_db()
+
+TEMP_FILE = "destination.jpg"
 
 async def verify_image_file_type(file: UploadFile = File(...)):
   if file.content_type not in settings.ALLOWED_MIME_TYPES:
@@ -31,6 +34,24 @@ async def root():
 async def get_users(email: str):
   user = db.get_user_from_email(email)
   return user.to_mongo().to_dict()
+
+@app.put('/users')
+async def update_user(email: str, user: UserOut):
+  user_data = user.dict()
+  user_data.pop('email')
+  user_data.pop('is_admin')
+
+  # TODO: add temp check and temp alert
+
+  id = db.update_user(email, user_data)
+  return { 'id': id, **user.dict() }
+
+@app.patch('/user-temp')
+async def update_user_temp(email: str, temp: float):
+  # TODO: add temp check and temp alert
+
+  id = db.update_user(email, {'temp': temp})
+  return {'temp': temp}
 
 @app.get('/users/all')
 async def get_users(token_data: TokenData = Depends(auth.get_token_data)):
@@ -78,28 +99,35 @@ async def get_current_user(token_data: TokenData = Depends(auth.get_token_data))
   return user.to_mongo().to_dict()
 
 @app.put('/users/me')
-async def update_user(user: UserOut, token_data: TokenData = Depends(auth.get_token_data)):
+async def update_current_user(user: UserOut, token_data: TokenData = Depends(auth.get_token_data)):
   user_data = user.dict()
   user_data.pop('email')
   user_data.pop('is_admin')
   id = db.update_user(token_data.username, user_data)
   return { 'id': id, **user.dict() }
 
-@app.patch('/users/me/image-encoding')
-def update_user_encoding(image: UploadFile = Depends(verify_image_file_type),
-                         token_data: TokenData = Depends(auth.get_token_data)):
-  uploaded_image = face_recog.load_image(image.file)
-  face_encoding = face_recog.generate_face_encoding(uploaded_image)
-  
-  encoding_data = { 'face_encoding': face_encoding }
-  db.update_user(token_data.username, encoding_data)
+@app.patch('/users/image-encoding')
+def update_user_encoding(email: str, file: UploadFile = File(...)):
+  try:
+    with open(TEMP_FILE, "wb") as buffer:
+      shutil.copyfileobj(file.file, buffer)
+
+    resized_image = face_recog.resize_image(TEMP_FILE)
+    image = face_recog.load_image(resized_image)
+    face_encoding = face_recog.generate_face_encoding(image)
+    
+    encoding_data = { 'face_encoding': face_encoding.tolist() }
+    db.update_user(email, encoding_data)
+  except (HasMoreThanOneFace, CannotReadFace) as err:
+    raise HTTPException(status_code=400, detail=str(err))
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
 
   return encoding_data
 
 @app.post('/users/me/image-encoding/compare')
-async def verify_image(image: UploadFile = Depends(verify_image_file_type),
-                       token_data: TokenData = Depends(auth.get_token_data)):
-  user = db.get_user_from_email(token_data.username)
+async def verify_image(email: str, image: UploadFile = Depends(verify_image_file_type)):
+  user = db.get_user_from_email(email)
 
   uploaded_image = face_recog.load_image(image.file)
   uploaded_face_encoding = face_recog.generate_face_encoding(uploaded_image)

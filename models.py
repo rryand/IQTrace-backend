@@ -11,9 +11,11 @@ class UserOut(User):
   last_name: str
   contact_number: str
   birthday: date
+  address: str
   survey: Optional[list] = []
   is_admin: bool = False
   face_encoding: Optional[list] = None
+  temp: Optional[float]
 
 class UserIn(UserOut):
   password: str
