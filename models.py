@@ -16,6 +16,7 @@ class UserOut(User):
   is_admin: bool = False
   face_encoding: Optional[list] = None
   temp: Optional[float]
+  is_verified: Optional[bool] = False
 
 class UserIn(UserOut):
   password: str

@@ -1,9 +1,9 @@
 from mongoengine import connect
 from mongoengine.errors import NotUniqueError, DoesNotExist
 
-from schemas import User, Room, Timelog
+from schemas import User, Room, Timelog, Verification
 from exceptions import (EmailIsAlreadyTaken, RoomDoesNotExist,
-  RoomHasDuplicateNumberOrName, UserDoesNotExist)
+  RoomHasDuplicateNumberOrName, UserDoesNotExist, VerificationItemDoesNotExist)
 
 
 def initialize_db() -> None:
@@ -80,3 +80,17 @@ def get_timelogs_from_room_number(room_num: int) -> list:
     timelogs.append(timelog.to_mongo().to_dict())
   
   return timelogs
+
+def create_verification(email: str) -> str:
+  new_verification = Verification(email=email)
+  new_verification.save()
+  return str(new_verification.pk)
+
+def delete_verification(pk: str) -> str:
+  try:
+    verification = Verification.objects.get(id=pk)
+    email = verification.email
+    verification.delete()
+  except DoesNotExist:
+    raise VerificationItemDoesNotExist(f"Email may already be verified.")
+  return email

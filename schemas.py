@@ -13,6 +13,7 @@ class User(Document):
   survey = ListField()
   face_encoding = ListField()
   temp = FloatField()
+  is_verified = BooleanField(default=False)
 
 class Timelog(Document):
   user_email = StringField(required=True)
@@ -28,3 +29,6 @@ class Room(Document):
       'number'
     ]
   }
+
+class Verification(Document):
+  email = StringField(required=True, unique=True)

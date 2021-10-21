@@ -10,9 +10,10 @@ import settings
 import services.face_recog as face_recog
 import services.auth_service as auth
 import services.db_service as db
+import services.mail_service as mail
 from models import UserOut, UserIn, Token, TokenData, Room, Timelog
 from exceptions import (CannotReadFace, EmailIsAlreadyTaken, HasMoreThanOneFace, RoomHasDuplicateNumberOrName,
-  UserDoesNotExist, RoomDoesNotExist, FileTypeNotAllowed)
+  UserDoesNotExist, RoomDoesNotExist, FileTypeNotAllowed, VerificationItemDoesNotExist)
 
 app = FastAPI()
 
@@ -199,6 +200,35 @@ def create_timelog(timelog: Timelog):
       **timelog.dict(),
     }
   return response
+
+@app.post('/verification')
+def send_verification_email(email: str):
+  email = email.replace(' ', '+').strip()
+  pk = db.create_verification(email)
+  mail.send_verification_email(email, pk)
+
+  return {
+    'email': email,
+    'message': "Email verification sent.",
+  }
+
+# NOTE: Should return HTML page and 
+#       POST verification from there
+@app.get('/verification/{verification_id}')
+def verify_email(verification_id: str):
+  try:
+    email = db.delete_verification(verification_id)
+    db.update_user(email, {'is_verified': True})
+    response = {
+      'email': email,
+      'is_verified': True,
+      'message': "Email verified."
+    }
+  except VerificationItemDoesNotExist as err:
+    response = {'message': str(err)}
+
+  return response
+  
 
 if __name__ == "__main__":
   uvicorn.run(app, host="0.0.0.0", port=8000)

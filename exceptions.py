@@ -18,3 +18,6 @@ class CannotReadFace(Exception):
 
 class FileTypeNotAllowed(Exception):
   pass
+
+class VerificationItemDoesNotExist(Exception):
+  pass
