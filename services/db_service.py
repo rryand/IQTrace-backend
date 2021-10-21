@@ -18,7 +18,8 @@ def create_user(user) -> str:
     raise EmailIsAlreadyTaken(f"{user['email']} is aleady taken")
   return str(new_user.pk)
 
-def get_user_from_email(email) -> User:
+def get_user_from_email(email: str) -> User:
+  email = email.replace(' ', '+').strip()
   try:
     user = User.objects.get(email=email)
   except DoesNotExist:
@@ -38,7 +39,8 @@ def delete_user(id) -> None:
   except DoesNotExist:
     raise UserDoesNotExist(f"User {id} does not exist.")
 
-def update_user(email, user_data) -> str:
+def update_user(email:str, user_data) -> str:
+  email = email.replace(' ', '+').strip()
   user_db = get_user_from_email(email)
   user_db.update(**user_data)
   return str(user_db.pk)
