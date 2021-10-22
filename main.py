@@ -205,8 +205,9 @@ def create_timelog(timelog: Timelog):
 def send_verification_email(email: str):
   email = email.replace(' ', '+').strip()
   try:
+    user = db.get_user_from_email(email)
     pk = db.create_verification(email)
-    mail.send_verification_email(email, pk)
+    mail.send_verification_email(email, user.first_name, pk)
   except VerificationAlreadyExists as err:
     raise HTTPException(status_code=403, detail=str(err))
 
