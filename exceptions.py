@@ -19,5 +19,8 @@ class CannotReadFace(Exception):
 class FileTypeNotAllowed(Exception):
   pass
 
+class VerificationAlreadyExists(Exception):
+  pass
+
 class VerificationItemDoesNotExist(Exception):
   pass

@@ -3,7 +3,8 @@ from mongoengine.errors import NotUniqueError, DoesNotExist
 
 from schemas import User, Room, Timelog, Verification
 from exceptions import (EmailIsAlreadyTaken, RoomDoesNotExist,
-  RoomHasDuplicateNumberOrName, UserDoesNotExist, VerificationItemDoesNotExist)
+  RoomHasDuplicateNumberOrName, UserDoesNotExist, 
+  VerificationAlreadyExists, VerificationItemDoesNotExist)
 
 
 def initialize_db() -> None:
@@ -82,8 +83,11 @@ def get_timelogs_from_room_number(room_num: int) -> list:
   return timelogs
 
 def create_verification(email: str) -> str:
-  new_verification = Verification(email=email)
-  new_verification.save()
+  try:
+    new_verification = Verification(email=email)
+    new_verification.save()
+  except NotUniqueError:
+    raise VerificationAlreadyExists("Verification already exists")
   return str(new_verification.pk)
 
 def delete_verification(pk: str) -> str:
@@ -92,5 +96,5 @@ def delete_verification(pk: str) -> str:
     email = verification.email
     verification.delete()
   except DoesNotExist:
-    raise VerificationItemDoesNotExist(f"Email may already be verified.")
+    raise VerificationItemDoesNotExist("Email may already be verified.")
   return email

@@ -13,7 +13,7 @@ import services.db_service as db
 import services.mail_service as mail
 from models import UserOut, UserIn, Token, TokenData, Room, Timelog
 from exceptions import (CannotReadFace, EmailIsAlreadyTaken, HasMoreThanOneFace, RoomHasDuplicateNumberOrName,
-  UserDoesNotExist, RoomDoesNotExist, FileTypeNotAllowed, VerificationItemDoesNotExist)
+  UserDoesNotExist, RoomDoesNotExist, FileTypeNotAllowed, VerificationAlreadyExists, VerificationItemDoesNotExist)
 
 app = FastAPI()
 
@@ -204,8 +204,11 @@ def create_timelog(timelog: Timelog):
 @app.post('/verification')
 def send_verification_email(email: str):
   email = email.replace(' ', '+').strip()
-  pk = db.create_verification(email)
-  mail.send_verification_email(email, pk)
+  try:
+    pk = db.create_verification(email)
+    mail.send_verification_email(email, pk)
+  except VerificationAlreadyExists as err:
+    raise HTTPException(status_code=403, detail=str(err))
 
   return {
     'email': email,
