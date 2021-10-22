@@ -1,6 +1,7 @@
 import json
-from datetime import timedelta
 import shutil
+from datetime import timedelta
+from typing import List
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
@@ -147,6 +148,14 @@ async def delete_user(id, token_data: TokenData = Depends(auth.get_token_data)):
   else:
     response = { 'message': f"User {id} deleted" }
   return response
+
+@app.get('/users/active-symptoms', response_model=List[UserOut])
+async def get_users_with_symptoms():
+  try:
+    users = db.get_users_with_symptoms()
+  except Exception as err:
+    raise HTTPException(status_code=500, detail=str(err))
+  return users
 
 @app.get('/rooms')
 def get_rooms():

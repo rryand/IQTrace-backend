@@ -34,6 +34,17 @@ def get_user_id_from_email(email) -> str:
 def get_users() -> str:
   return User.objects.to_json()
 
+def get_users_with_symptoms() -> str:
+  query = {}
+  query['survey__exists'] = True
+  query['survey__not__size'] = 0
+  queried_users = User.objects(**query)
+
+  users = []
+  for user in queried_users:
+    users.append(user.to_mongo().to_dict())
+  return users
+
 def delete_user(id) -> None:
   try:
     User.objects.get(id=id).delete()

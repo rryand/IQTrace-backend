@@ -14,6 +14,7 @@ class User(Document):
   face_encoding = ListField()
   temp = FloatField()
   is_verified = BooleanField(default=False)
+  last_survey_date = DateField()
 
 class Timelog(Document):
   user_email = StringField(required=True)
