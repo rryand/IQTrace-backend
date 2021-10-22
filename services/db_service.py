@@ -78,6 +78,24 @@ def get_room(room_num):
 def delete_room(room_num) -> None:
   get_room(room_num).delete()
 
+def get_timelogs() -> list:
+  rooms = Room.objects
+
+  timelogs = {}
+  for room in rooms:
+    room_timelogs = Timelog.objects(room_number=room.number)
+
+    timelogs_list = []
+    for room_timelog in room_timelogs:
+      log = room_timelog.to_mongo().to_dict()
+      log['timestamp'] = log['timestamp'].strftime("%Y-%m-%dT%H:%M:%S")
+      timelogs_list.append(log)
+
+    timelogs[room.number] = timelogs_list
+  
+  return timelogs
+
+
 def create_timelog(timelog) -> str:
   new_timelog = Timelog(**timelog)
   new_timelog.save()

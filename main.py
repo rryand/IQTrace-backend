@@ -1,11 +1,12 @@
 import json
 import shutil
 from datetime import timedelta
-from typing import List
+from typing import Dict, List
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
+from bson import json_util
 
 import settings
 import services.face_recog as face_recog
@@ -211,6 +212,11 @@ def create_timelog(timelog: Timelog):
       **timelog.dict(),
     }
   return response
+
+@app.get('/timelog/all', response_model=Dict[int, List[Timelog]])
+async def get_timelogs():
+  timelogs = db.get_timelogs()
+  return json.loads(json_util.dumps(timelogs))
 
 @app.post('/verification')
 def send_verification_email(email: str):
