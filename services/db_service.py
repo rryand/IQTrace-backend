@@ -1,4 +1,5 @@
 from mongoengine import connect
+from mongoengine.queryset.visitor import Q
 from mongoengine.errors import NotUniqueError, DoesNotExist
 
 from schemas import User, Room, Timelog, Verification
@@ -36,13 +37,17 @@ def get_users() -> str:
 
 def get_users_with_symptoms() -> str:
   query = {}
+  query2 = {}
   query['survey__exists'] = True
   query['survey__not__size'] = 0
-  queried_users = User.objects(**query)
+  query2['temp__exists'] = True
+  query2['temp__gte'] = 38.0
+  queried_users = User.objects(Q(**query) | Q(**query2))
 
   users = []
   for user in queried_users:
     users.append(user.to_mongo().to_dict())
+
   return users
 
 def delete_user(id) -> None:
